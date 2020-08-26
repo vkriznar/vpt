@@ -7,6 +7,7 @@ struct Photon {
     vec3 direction;
     vec3 transmittance;
     vec3 radiance;
+    vec3 light;
     uint bounces;
     uint samples;
 };

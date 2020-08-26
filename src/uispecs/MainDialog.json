@@ -57,7 +57,8 @@
                         },
                         {
                           "value": "mcm",
-                          "label": "Multiple scattering"
+                          "label": "Multiple scattering",
+                          "selected": true
                         },
                         {
                           "value": "mcc",
@@ -70,8 +71,8 @@
                         },
                         {
                           "value": "rcd",
-                          "label": "Experiment",
-                          "selected": true
+                          "label": "Experiment"
+
 
                         }
                       ]

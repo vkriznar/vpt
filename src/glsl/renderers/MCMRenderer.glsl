@@ -46,6 +46,8 @@ uniform mediump sampler3D uVolume;
 uniform mediump sampler2D uTransferFunction;
 uniform mediump sampler2D uEnvironment;
 
+uniform mediump sampler2D uLightDirection;
+
 uniform mat4 uMvpInverseMatrix;
 uniform vec2 uInverseResolution;
 uniform float uRandSeed;
@@ -64,10 +66,18 @@ layout (location = 0) out vec4 oPosition;
 layout (location = 1) out vec4 oDirection;
 layout (location = 2) out vec4 oTransmittance;
 layout (location = 3) out vec4 oRadiance;
+layout (location = 4) out vec4 oLightDirection;
 
 @rand
 @unprojectRand
 @intersectCube
+
+vec4 getRandomLight(vec2 randState) {
+    //    float divider = 1.0 / float(lights.length());
+    //    randState = rand(randState);
+    //    return lights[int(randState.x / divider)];
+    return vec4(1);
+}
 
 void resetPhoton(inout vec2 randState, inout Photon photon) {
     vec3 from, to;
@@ -77,6 +87,7 @@ void resetPhoton(inout vec2 randState, inout Photon photon) {
     vec2 tbounds = max(intersectCube(from, photon.direction), 0.0);
     photon.position = from + tbounds.x * photon.direction;
     photon.transmittance = vec3(1);
+    photon.light = getRandomLight(randState).xyz;
 }
 
 vec4 sampleEnvironmentMap(vec3 d) {
@@ -142,12 +153,17 @@ void main() {
         float PScattering = muScattering / muMajorant;
 
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
+            if (photon.bounces <= uMaxBounces) {
+                photon.position = photon.position + photon.direction * intersectCube(photon.position, photon.direction).y;
+                photon.bounces = uMaxBounces + 1u;
+                photon.direction = -normalize(photon.light);
+            } else {
+                vec3 radiance = photon.transmittance;
+                photon.samples++;
+                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+                resetPhoton(r, photon);
+            }
             // out of bounds
-            vec4 envSample = sampleEnvironmentMap(photon.direction);
-            vec3 radiance = photon.transmittance * envSample.rgb;
-            photon.samples++;
-            photon.radiance += (radiance - photon.radiance) / float(photon.samples);
-            resetPhoton(r, photon);
         } else if (photon.bounces >= uMaxBounces) {
             // max bounces achieved -> only estimate transmittance
             float weightAS = (muAbsorption + muScattering) / uMajorant;
@@ -174,6 +190,7 @@ void main() {
     oDirection = vec4(photon.direction, float(photon.bounces));
     oTransmittance = vec4(photon.transmittance, 0);
     oRadiance = vec4(photon.radiance, float(photon.samples));
+    oLightDirection = vec4(photon.light, 0);
 }
 
 // #section MCMRender/vertex
@@ -233,10 +250,18 @@ layout (location = 0) out vec4 oPosition;
 layout (location = 1) out vec4 oDirection;
 layout (location = 2) out vec4 oTransmittance;
 layout (location = 3) out vec4 oRadiance;
+layout (location = 4) out vec4 oLightDirection;
 
 @rand
 @unprojectRand
 @intersectCube
+
+vec4 getRandomLight(vec2 randState) {
+    //    float divider = 1.0 / float(lights.length());
+    //    randState = rand(randState);
+    //    return lights[int(randState.x / divider)];
+    return vec4(1);
+}
 
 void main() {
     Photon photon;
@@ -250,8 +275,10 @@ void main() {
     photon.radiance = vec3(1);
     photon.bounces = 0u;
     photon.samples = 0u;
+    photon.light = getRandomLight(randState).xyz;
     oPosition = vec4(photon.position, 0);
     oDirection = vec4(photon.direction, float(photon.bounces));
     oTransmittance = vec4(photon.transmittance, 0);
     oRadiance = vec4(photon.radiance, float(photon.samples));
+    oLightDirection = vec4(photon.light, 0);
 }
