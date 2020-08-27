@@ -136,6 +136,7 @@ void main() {
     vec4 radianceAndSamples = texture(uRadiance, mappedPosition);
     photon.radiance = radianceAndSamples.rgb;
     photon.samples = uint(radianceAndSamples.w + 0.5);
+    photon.light = texture(uLightDirection, mappedPosition).rgb;
 
     vec2 r = rand(vPosition * uRandSeed);
     for (uint i = 0u; i < uSteps; i++) {
@@ -161,6 +162,7 @@ void main() {
                 vec3 radiance = photon.transmittance;
                 photon.samples++;
                 photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                photon.radiance = photon.light;
                 resetPhoton(r, photon);
             }
             // out of bounds
