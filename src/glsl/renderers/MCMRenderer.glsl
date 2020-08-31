@@ -152,17 +152,21 @@ void main() {
         float PNull = abs(muNull) / muMajorant;
         float PAbsorption = muAbsorption / muMajorant;
         float PScattering = muScattering / muMajorant;
-
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
-            if (photon.bounces <= uMaxBounces) {
+            if (photon.bounces <= uMaxBounces && !(photon.transmittance.x > 0.999 && photon.transmittance.y > 0.999 && photon.transmittance.z > 0.999)) {
                 photon.position = photon.position + photon.direction * intersectCube(photon.position, photon.direction).y;
-                photon.bounces = uMaxBounces + 1u;
+                photon.bounces = uMaxBounces + 3u;
                 photon.direction = -normalize(photon.light);
-            } else {
+            }
+            else {
                 vec3 radiance = photon.transmittance;
+//                if (radiance.x > 0.9 && radiance.y > 0.9 && radiance.z > 0.9) {
+//                    radiance = vec3(1, 0, 1);
+//                }
                 photon.samples++;
-                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
-//                photon.radiance = photon.light;
+//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                photon.radiance = normalize(photon.light);
+                photon.radiance = normalize(photon.direction);
                 resetPhoton(r, photon);
             }
             // out of bounds
@@ -172,15 +176,27 @@ void main() {
             photon.transmittance *= 1.0 - weightAS;
         } else if (r.y < PAbsorption) {
             // absorption
-            float weightA = muAbsorption / (uMajorant * PAbsorption);
+            float weightA = min(muAbsorption / (uMajorant * PAbsorption), 0.99);
             photon.transmittance *= 1.0 - weightA;
+//            if (weightA > 1.0) {
+//                vec3 radiance = vec3(1, 0, 1);
+//                photon.samples++;
+//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                resetPhoton(r, photon);
+//            }
         } else if (r.y < PAbsorption + PScattering) {
             // scattering
             r = rand(r);
-            float weightS = muScattering / (uMajorant * PScattering);
+            float weightS = min(muScattering / (uMajorant * PScattering), 0.99);
             photon.transmittance *= volumeSample.rgb * weightS;
             photon.direction = sampleHenyeyGreenstein(uScatteringBias, r, photon.direction);
             photon.bounces++;
+//            if (weightS > 1.0) {
+//                vec3 radiance = vec3(1, 0, 1);
+//                photon.samples++;
+//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                resetPhoton(r, photon);
+//            }
         } else {
             // null collision
             float weightN = muNull / (uMajorant * PNull);
