@@ -153,10 +153,15 @@ void main() {
         float PAbsorption = muAbsorption / muMajorant;
         float PScattering = muScattering / muMajorant;
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
-            if (photon.bounces <= uMaxBounces && !(photon.transmittance.x > 0.999 && photon.transmittance.y > 0.999 && photon.transmittance.z > 0.999)) {
+            if (photon.bounces <= uMaxBounces + 3u && photon.bounces > 0u) { //(photon.transmittance.x > 0.999 && photon.transmittance.y > 0.999 && photon.transmittance.z > 0.999)
                 photon.position = photon.position + photon.direction * intersectCube(photon.position, photon.direction).y;
-                photon.bounces = uMaxBounces + 3u;
+                photon.bounces = uMaxBounces + 12u;
                 photon.direction = -normalize(photon.light);
+
+//                vec3 radiance = vec3(1, 0, 1);
+//                photon.samples++;
+//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                resetPhoton(r, photon);
             }
             else {
                 vec3 radiance = photon.transmittance;
@@ -164,9 +169,9 @@ void main() {
 //                    radiance = vec3(1, 0, 1);
 //                }
                 photon.samples++;
-//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
 //                photon.radiance = normalize(photon.light);
-                photon.radiance = normalize(photon.direction);
+//                photon.radiance = abs(normalize(photon.direction));
                 resetPhoton(r, photon);
             }
             // out of bounds
