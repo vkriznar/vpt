@@ -10,4 +10,5 @@ struct Photon {
     vec3 light;
     uint bounces;
     uint samples;
+    uint done;
 };

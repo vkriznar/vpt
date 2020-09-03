@@ -88,6 +88,7 @@ void resetPhoton(inout vec2 randState, inout Photon photon) {
     photon.position = from + tbounds.x * photon.direction;
     photon.transmittance = vec3(1);
     photon.light = getRandomLight(randState).xyz;
+    photon.done = 0u;
 }
 
 vec4 sampleEnvironmentMap(vec3 d) {
@@ -136,7 +137,9 @@ void main() {
     vec4 radianceAndSamples = texture(uRadiance, mappedPosition);
     photon.radiance = radianceAndSamples.rgb;
     photon.samples = uint(radianceAndSamples.w + 0.5);
-    photon.light = texture(uLightDirection, mappedPosition).rgb;
+    vec4 lightAndDone = texture(uLightDirection, mappedPosition);
+    photon.light = lightAndDone.rgb;
+    photon.done = uint(lightAndDone.w + 0.5);
 
     vec2 r = rand(vPosition * uRandSeed);
     for (uint i = 0u; i < uSteps; i++) {
@@ -153,11 +156,18 @@ void main() {
         float PAbsorption = muAbsorption / muMajorant;
         float PScattering = muScattering / muMajorant;
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
-            if (photon.bounces <= uMaxBounces + 3u && photon.bounces > 0u) {
-                photon.position = photon.position + photon.direction * intersectCube(photon.position, photon.direction).y;
-                photon.bounces = uMaxBounces + 12u;
-                photon.direction = -normalize(photon.light);
+            if (photon.bounces == 0u) {
+                photon.radiance = vec3(1, 1, 1);
+            } else {
+                photon.radiance = vec3(1, 0, 1);
+            }
 
+            if (photon.done < 1u && photon.bounces > 0u) {
+                photon.position = photon.position + photon.direction * intersectCube(photon.position, photon.direction).y;
+                photon.done = 1u;
+                photon.direction = -normalize(photon.light);
+                photon.bounces = uMaxBounces + 1u;
+//                photon.radiance = vec3(1, 0, 1);
 //                vec3 radiance = vec3(1, 0, 1);
 //                photon.samples++;
 //                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
@@ -169,8 +179,9 @@ void main() {
 //                    radiance = vec3(1, 0, 1);
 //                }
                 photon.samples++;
-                //photon.radiance += (radiance - photon.radiance) / float(photon.samples);
-                photon.radiance = photon.position;
+//                photon.radiance = vec3(1, 1, 1);
+//                photon.radiance += (radiance - photon.radiance) / float(photon.samples);
+//                photon.radiance = photon.position;
 //                photon.radiance = normalize(photon.light);
 //                photon.radiance = vec3(float(photon.bounces) / float(uMaxBounces));
 //                photon.radiance = vec3(1, 0, 1);
@@ -181,10 +192,20 @@ void main() {
             // max bounces achieved -> only estimate transmittance
             float weightAS = (muAbsorption + muScattering) / uMajorant;
             photon.transmittance *= 1.0 - weightAS;
+            if (photon.bounces == 0u) {
+                photon.radiance = vec3(1, 1, 1);
+            } else {
+                photon.radiance = vec3(0, 0, 0);
+            }
         } else if (r.y < PAbsorption) {
             // absorption
             float weightA = muAbsorption / (uMajorant * PAbsorption);
             photon.transmittance *= 1.0 - weightA;
+            if (photon.bounces == 0u) {
+                photon.radiance = vec3(1, 1, 1);
+            } else {
+                photon.radiance = vec3(1, 0, 0);
+            }
 //            if (weightA > 1.0) {
 //                vec3 radiance = vec3(1, 0, 1);
 //                photon.samples++;
@@ -198,6 +219,11 @@ void main() {
             photon.transmittance *= volumeSample.rgb * weightS;
             photon.direction = sampleHenyeyGreenstein(uScatteringBias, r, photon.direction);
             photon.bounces++;
+            if (photon.bounces == 0u) {
+                photon.radiance = vec3(1, 1, 1);
+            } else {
+                photon.radiance = vec3(0, 1, 0);
+            }
 //            if (weightS > 1.0) {
 //                vec3 radiance = vec3(1, 0, 1);
 //                photon.samples++;
@@ -208,6 +234,11 @@ void main() {
             // null collision
             float weightN = muNull / (uMajorant * PNull);
             photon.transmittance *= weightN;
+            if (photon.bounces == 0u) {
+                photon.radiance = vec3(1, 1, 1);
+            } else {
+                photon.radiance = vec3(0, 0, 1);
+            }
         }
     }
 
@@ -215,7 +246,7 @@ void main() {
     oDirection = vec4(photon.direction, float(photon.bounces));
     oTransmittance = vec4(photon.transmittance, 0);
     oRadiance = vec4(photon.radiance, float(photon.samples));
-    oLightDirection = vec4(photon.light, 0);
+    oLightDirection = vec4(photon.light, float(photon.done));
 }
 
 // #section MCMRender/vertex
@@ -300,10 +331,11 @@ void main() {
     photon.radiance = vec3(1);
     photon.bounces = 0u;
     photon.samples = 0u;
+    photon.done = 0u;
     photon.light = getRandomLight(randState).xyz;
     oPosition = vec4(photon.position, 0);
     oDirection = vec4(photon.direction, float(photon.bounces));
     oTransmittance = vec4(photon.transmittance, 0);
     oRadiance = vec4(photon.radiance, float(photon.samples));
-    oLightDirection = vec4(photon.light, 0);
+    oLightDirection = vec4(photon.light, float(photon.done));
 }
