@@ -38,6 +38,7 @@ out vec4 oColor;
 
 @intersectCube
 
+# Woodcock tracking
 void main() {
     vec3 rayDirection = vRayTo - vRayFrom;
     vec2 tbounds = max(intersectCube(vRayFrom, rayDirection), 0.0);
@@ -61,7 +62,8 @@ void main() {
             colorSample.a *= rayStepLength * uAlphaCorrection;
             colorSample.rgb *= colorSample.a;
             accumulator += (1.0 - accumulator.a) * colorSample;
-            t += uStepSize;
+            // t += 2 * uStepSize * uOffset; // Random offset from 0 to 2*uStepSize
+            t += uStepSize
         }
 
         if (accumulator.a > 1.0) {
