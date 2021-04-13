@@ -1,6 +1,7 @@
 // #package glsl/shaders
 
 // #include ../mixins/unproject.glsl
+// #include ../mixins/rand.glsl
 // #include ../mixins/intersectCube.glsl
 
 // #section EAMGenerate/vertex
@@ -37,6 +38,7 @@ in vec3 vRayTo;
 out vec4 oColor;
 
 @intersectCube
+@rand
 
 # Woodcock tracking
 void main() {
@@ -55,15 +57,23 @@ void main() {
         vec4 colorSample;
         vec4 accumulator = vec4(0.0);
 
-        while (t < 1.0 && accumulator.a < 0.99) {
+        randPosition = vec2(aPosition * uOffset)
+        r = rand(vPosisition)
+
+        for(int i = 1; i <= floor(1 / uStepSize); i++) {
+            if (accumulator.a > 0.99) { break; }
+
             pos = mix(from, to, t);
             val = texture(uVolume, pos).r;
             colorSample = texture(uTransferFunction, vec2(val, 0.5));
             colorSample.a *= rayStepLength * uAlphaCorrection;
             colorSample.rgb *= colorSample.a;
             accumulator += (1.0 - accumulator.a) * colorSample;
-            // TODO: THIS PART CHANGED
-            t += 2 * uStepSize * uOffset; // Random offset from 0 to 2*uStepSize
+            // You can include this part to test it also
+            // t += 2 * uStepSize * uOffset; // Random offset from 0 to 2*uStepSize
+            // Split t into [1/uStepSize] parts and randomly offset each step 
+            t = uStepSize * i + (r.x - 0.5) * uStepSize
+            r = rand(r)
         }
 
         if (accumulator.a > 1.0) {

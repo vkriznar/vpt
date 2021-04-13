@@ -50,8 +50,8 @@ void main() {
         float rayStepLength = distance(from, to) * uStepSize;
 
         // TODO: THIS PART CHANGED
-        // Set initial t - ray values offset from [0, 0.2) for uStepSize=0.05
-        float t = 4 * uStepSize * uOffset;
+        // Set initial t - ray values offset from [0, uStepSize)
+        float t = uStepSize * uOffset;
         vec3 pos;
         float val;
         vec4 colorSample;
