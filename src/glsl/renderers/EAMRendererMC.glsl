@@ -53,7 +53,6 @@ uniform float uBlur;
 
 uniform float uAbsorptionCoefficient;
 uniform float uEmissionCoefficient;
-uniform float uEmissionBias;
 uniform float uMajorant;
 uniform uint uMaxBounces;
 uniform uint uSteps;
@@ -97,46 +96,28 @@ vec3 randomDirection(vec2 U) {
     return vec3(k * cos(phi), k * sin(phi), z);
 }
 
-float sampleHenyeyGreensteinAngleCosine(float g, float U) {
-    float g2 = g * g;
-    float c = (1.0 - g2) / (1.0 - g + 2.0 * g * U);
-    return (1.0 + g2 - c * c) / (2.0 * g);
-}
-
-vec3 sampleHenyeyGreenstein(float g, vec2 U, vec3 direction) {
-    // generate random direction and adjust it so that the angle is HG-sampled
-    vec3 u = randomDirection(U);
-    if (abs(g) < EPS) {
-        return u;
-    }
-    float hgcos = sampleHenyeyGreensteinAngleCosine(g, fract(sin(U.x * 12345.6789) + 0.816723));
-    float lambda = hgcos - dot(direction, u);
-    return normalize(u + lambda * direction);
-}
-
 void main() {
-    // TODO: Create a Photon object with position, direction, transmittance, radience, bounces and samples
+    // Create a Photon object with position, direction, transmittance, radience, bounces and samples
     Photon photon; 
-    // TODO: Create 2d vector mapped position from vPosition (what is vPosisition - produces by GPU?)
+    // Create 2d vector mapped position from vPosition (what is vPosisition - produces by GPU?) - YES
     vec2 mappedPosition = vPosition * 0.5 + 0.5;
-    // TODO: What does texture do? uPosition?
+    // What does texture do? uPosition?
     photon.position = texture(uPosition, mappedPosition).xyz;
-    // TODO: xyz attribute takes care of direction of photon bounce, based on position, w?
+    // xyz attribute takes care of direction of photon bounce, based on position, w?
     vec4 directionAndBounces = texture(uDirection, mappedPosition);
     photon.direction = directionAndBounces.xyz;
     photon.bounces = uint(directionAndBounces.w + 0.5);
-    // TODO: Set photon's trasmitance to mapped position
+    // Set photon's trasmitance to mapped position
     photon.transmittance = texture(uTransmittance, mappedPosition).rgb;
     vec4 radianceAndSamples = texture(uRadiance, mappedPosition);
-    // TODO: Set photon's radiance based on uRadiance and position, w?
+    // Set photon's radiance based on uRadiance and position, w?
     photon.radiance = radianceAndSamples.rgb;
     photon.samples = uint(radianceAndSamples.w + 0.5);
 
-    // TODO: Create new random seed in the form of vec2 r, what is r.x what is r.y? Does that just mean we
+    // Create new random seed in the form of vec2 r, what is r.x what is r.y? Does that just mean we
     // generate two seperate random floats from [0, 1)?
     vec2 r = rand(vPosition * uRandSeed);
     for (uint i = 0u; i < uSteps; i++) {
-        // Why random again?
         r = rand(r);
         // TODO: Calculate step size based on exponential distance travelled and uMajorant, what is uMajorant?
         // Is uMajorant like a normalizing factor?
@@ -155,54 +136,40 @@ void main() {
 
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
             // out of bounds
-            vec4 envSample = sampleEnvironmentMap(photon.direction);
-            vec3 radiance = photon.transmittance * envSample.rgb;
+            vec3 radiance = vec3(0);
             photon.samples++;
             photon.radiance += (radiance - photon.radiance) / float(photon.samples);
-            // TODO: What does resetting a photon do if we're out of bounce
+            // What does resetting a photon do if we're out of bounce
             resetPhoton(r, photon);
         } else if (photon.bounces >= uMaxBounces) {
-            // TODO: max bounces achieved -> only estimate transmittance
+            // max bounces achieved -> only estimate transmittance
             // What is weightAS?
             float weightAS = (muAbsorption + muEmission) / uMajorant;
             photon.transmittance *= 1.0 - weightAS;
         } else if (r.y < PAbsorption) {
-            // TODO: absorption - What is weightA? How much of our photon gets absorbed?
+            // absorption - What is weightA? How much of our photon gets absorbed?
             float weightA = muAbsorption / (uMajorant * PAbsorption);
             photon.transmittance *= 1.0 - weightA;
         } else if (r.y < PAbsorption + PEmission) {
-            // TODO: emission - I intend to do emission based on muAbsorption, if volume has absorped some
+            // emission - I intend to do emission based on muAbsorption, if volume has absorped some
             // than it is more likely to emmit a photon. In slides funamentals page 7 there is 
-            // modeling the emission as abs_coeff * emitted_radiance, what is emmited randience?
-            r = rand(r);
-            // TODO: What is weightS, why is photon's trasmittance (volume.rgb * weightS)
-            float weightS = (muAbsorption * muEmission) / (uMajorant * PAbsorption * PEmission);
-            // TODO: Here we generate a new Proton most likely, which means we now have two photons,
+            // modeling the emission as abs_coeff * emitted_radiance, what is emmited radience?
+            // Here we generate a new Proton most likely, which means we now have two photons,
             // what do we need to call for the integrate part to be done on the new photon? Also
             // how much transmittance does the new photon have, same as volume had muAbsorption?
-            Photon newPhoton;
-            newPhoton.position = photon.position
-            // TODO: direction of scattered photon, so in my project with emission it doesn't
-            // need to comform to HG scattering, but a random emission uniformly in all directions?
-            // photon.direction = sampleHenyeyGreenstein(uEmissionBias, r, photon.direction);
-            newPhoton.direction = randomDirection(r)
-            newPhoton.bounces = 0u
-            newPhoton.samples = 0u
-            // TODO: newPhoton.transmittance ??
-            newPhoton.transmittance = volumeSample.rgb * weightS
-            // TODO: What is newProton radiance?
-            newPhoton.radiance = 0
+            vec3 radiance = photon.transmittance * volumeSample.rgb;
+            radiance += photon.radiance
         } else {
-            // TODO: null collision - what is null collision, photon just passing through? Or is it
+            // null collision - what is null collision, photon just passing through? Or is it
             // photon colliding with fictitious medium?
-            // TODO: What is weightN?
+            // What is weightN?
             float weightN = muNull / (uMajorant * PNull);
-            // TODO: Why do we lower transmittance
+            // Why do we lower transmittance
             photon.transmittance *= weightN;
         }
     }
 
-    // TODO: What are these oValues? original photon values?
+    // What are these oValues? original photon values?
     oPosition = vec4(photon.position, 0);
     oDirection = vec4(photon.direction, float(photon.bounces));
     oTransmittance = vec4(photon.transmittance, 0);

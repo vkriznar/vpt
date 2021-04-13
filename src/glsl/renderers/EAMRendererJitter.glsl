@@ -57,8 +57,8 @@ void main() {
         vec4 colorSample;
         vec4 accumulator = vec4(0.0);
 
-        randPosition = vec2(aPosition * uOffset)
-        r = rand(vPosisition)
+        randPosition = vRayFrom.xy * uOffset
+        r = rand(randPosition)
 
         for(int i = 1; i <= floor(1 / uStepSize); i++) {
             if (accumulator.a > 0.99) { break; }
@@ -71,7 +71,7 @@ void main() {
             accumulator += (1.0 - accumulator.a) * colorSample;
             // You can include this part to test it also
             // t += 2 * uStepSize * uOffset; // Random offset from 0 to 2*uStepSize
-            // Split t into [1/uStepSize] parts and randomly offset each step 
+            // Split t into [1/uStepSize] parts and randomly offset each part
             t = uStepSize * i + (r.x - 0.5) * uStepSize
             r = rand(r)
         }
