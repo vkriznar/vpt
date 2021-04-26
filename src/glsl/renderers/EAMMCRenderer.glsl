@@ -5,15 +5,15 @@
 // #include ../mixins/unprojectRand.glsl
 // #include ../mixins/intersectCube.glsl
 
-// #section MCMGenerate/vertex
+// #section EAMMCGenerate/vertex
 
 void main() {}
 
-// #section MCMGenerate/fragment
+// #section EAMMCGenerate/fragment
 
 void main() {}
 
-// #section MCMIntegrate/vertex
+// #section EAMMCIntegrate/vertex
 
 #version 300 es
 
@@ -26,7 +26,7 @@ void main() {
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 
-// #section MCMIntegrate/fragment
+// #section EAMMCIntegrate/fragment
 
 #version 300 es
 precision mediump float;
@@ -176,7 +176,7 @@ void main() {
     oRadiance = vec4(photon.radiance, float(photon.samples));
 }
 
-// #section MCMRender/vertex
+// #section EAMMCRender/vertex
 
 #version 300 es
 
@@ -188,7 +188,7 @@ void main() {
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 
-// #section MCMRender/fragment
+// #section EAMMCRender/fragment
 
 #version 300 es
 precision mediump float;
@@ -202,7 +202,7 @@ void main() {
     oColor = vec4(texture(uColor, vPosition).rgb, 1);
 }
 
-// #section MCMReset/vertex
+// #section EAMMCReset/vertex
 
 #version 300 es
 
@@ -215,7 +215,7 @@ void main() {
     gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 
-// #section MCMReset/fragment
+// #section EAMMCReset/fragment
 
 #version 300 es
 precision mediump float;

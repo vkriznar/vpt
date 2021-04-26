@@ -31,14 +31,15 @@ uniform mediump sampler2D uTransferFunction;
 uniform float uStepSize;
 uniform float uOffset;
 uniform float uAlphaCorrection;
+uniform float uType;
 
 in vec3 vRayFrom;
 in vec3 vRayTo;
 out vec4 oColor;
 
 @intersectCube
+@rand
 
-# Woodcock tracking
 void main() {
     vec3 rayDirection = vRayTo - vRayFrom;
     vec2 tbounds = max(intersectCube(vRayFrom, rayDirection), 0.0);
@@ -50,20 +51,42 @@ void main() {
         float rayStepLength = distance(from, to) * uStepSize;
 
         float t = 0.0;
+        // Sample offset
+        if (uType == 1.0) { t = uStepSize * uOffset; }
+
         vec3 pos;
         float val;
         vec4 colorSample;
         vec4 accumulator = vec4(0.0);
 
-        while (t < 1.0 && accumulator.a < 0.99) {
-            pos = mix(from, to, t);
-            val = texture(uVolume, pos).r;
-            colorSample = texture(uTransferFunction, vec2(val, 0.5));
-            colorSample.a *= rayStepLength * uAlphaCorrection;
-            colorSample.rgb *= colorSample.a;
-            accumulator += (1.0 - accumulator.a) * colorSample;
-            // t += 2 * uStepSize * uOffset; // Random offset from 0 to 2*uStepSize
-            t += uStepSize
+        if (uType < 1.0) {
+            vec2 randPosition = vRayFrom.xy * uOffset;
+            vec2 r = rand(randPosition);
+
+            for(int i = 1; i <= int(1.0 / uStepSize); i++) {
+                if (accumulator.a > 0.99) { break; }
+
+                pos = mix(from, to, t);
+                val = texture(uVolume, pos).r;
+                colorSample = texture(uTransferFunction, vec2(val, 0.5));
+                colorSample.a *= rayStepLength * uAlphaCorrection;
+                colorSample.rgb *= colorSample.a;
+                accumulator += (1.0 - accumulator.a) * colorSample;
+
+                t = uStepSize * float(i) + (r.x - 0.5) * uStepSize;
+                r = rand(r);
+            }
+        } else {
+            while (t < 1.0 && accumulator.a < 0.99) {
+                pos = mix(from, to, t);
+                val = texture(uVolume, pos).r;
+                colorSample = texture(uTransferFunction, vec2(val, 0.5));
+                colorSample.a *= rayStepLength * uAlphaCorrection;
+                colorSample.rgb *= colorSample.a;
+                accumulator += (1.0 - accumulator.a) * colorSample;
+
+                t += uStepSize;
+            }
         }
 
         if (accumulator.a > 1.0) {

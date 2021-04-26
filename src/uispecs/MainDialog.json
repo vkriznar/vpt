@@ -52,6 +52,10 @@
                           "label": "Emission-absorption model"
                         },
                         {
+                          "value": "eammc",
+                          "label": "Emission-absorption model (Monte Carlo)"
+                        },
+                        {
                           "value": "mcs",
                           "label": "Single scattering"
                         },

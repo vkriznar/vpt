@@ -94,6 +94,7 @@ _handleRendererChange(which) {
     if (this._rendererDialog) {
         this._rendererDialog.destroy();
     }
+    console.log(which);
     this._renderingContext.chooseRenderer(which);
     const renderer = this._renderingContext.getRenderer();
     const container = this._mainDialog.getRendererSettingsContainer();
@@ -171,6 +172,7 @@ _getDialogForRenderer(renderer) {
         case 'mip' : return MIPRendererDialog;
         case 'iso' : return ISORendererDialog;
         case 'eam' : return EAMRendererDialog;
+        case 'eammc' : return EAMMCRendererDialog;
         case 'mcs' : return MCSRendererDialog;
         case 'mcm' : return MCMRendererDialog;
         case 'mcc' : return MCMRendererDialog; // yes, the same

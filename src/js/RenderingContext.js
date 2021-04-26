@@ -291,6 +291,7 @@ _getRendererClass(renderer) {
         case 'mip' : return MIPRenderer;
         case 'iso' : return ISORenderer;
         case 'eam' : return EAMRenderer;
+        case 'eammc' : return EAMMCRenderer;
         case 'mcs' : return MCSRenderer;
         case 'mcm' : return MCMRenderer;
         case 'mcc' : return MCCRenderer;

@@ -7,6 +7,31 @@
   "children": [
     {
       "type": "field",
+      "label": "Type:",
+      "children": [
+        {
+          "type": "dropdown",
+          "bind": "type",
+          "options": [
+            {
+              "value": 0,
+              "label": "Jitter"
+            },
+            {
+              "value": 1,
+              "label": "Sample Offset"
+            },
+            {
+              "value": 2,
+              "label": "Normal",
+              "selected": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "field",
       "label": "Steps:",
       "children": [
         {

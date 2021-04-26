@@ -17,6 +17,7 @@ constructor(renderer, options) {
 
     this._binds.steps.addEventListener('input', this._handleChange);
     this._binds.opacity.addEventListener('input', this._handleChange);
+    this._binds.type.addEventListener('input', this._handleChange);
 
     this._tfwidget = new TransferFunctionWidget();
     this._binds.tfcontainer.add(this._tfwidget);
@@ -31,6 +32,7 @@ destroy() {
 _handleChange() {
     this._renderer._stepSize = 1 / this._binds.steps.getValue();
     this._renderer._alphaCorrection = this._binds.opacity.getValue();
+    this._renderer._type = this._binds.type.getValue();
 
     this._renderer.reset();
 }

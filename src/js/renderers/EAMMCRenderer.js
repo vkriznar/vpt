@@ -3,7 +3,7 @@
 // #include ../WebGL.js
 // #include AbstractRenderer.js
 
-class EAMRendererMC extends AbstractRenderer {
+class EAMMCRenderer extends AbstractRenderer {
 
     constructor(gl, volume, environmentTexture, options) {
         super(gl, volume, environmentTexture, options);
@@ -18,10 +18,10 @@ class EAMRendererMC extends AbstractRenderer {
         }, options);
     
         this._programs = WebGL.buildPrograms(this._gl, {
-            generate  : SHADERS.EAMGenerateMC,
-            integrate : SHADERS.EAMIntegrateMC,
-            render    : SHADERS.EAMRenderMC,
-            reset     : SHADERS.EAMResetMC
+            generate  : SHADERS.EAMMCGenerate,
+            integrate : SHADERS.EAMMCIntegrate,
+            render    : SHADERS.EAMMCRender,
+            reset     : SHADERS.EAMMCReset
         }, MIXINS);
     }
     

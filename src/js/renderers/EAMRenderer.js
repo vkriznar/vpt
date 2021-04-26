@@ -10,7 +10,8 @@ constructor(gl, volume, environmentTexture, options) {
 
     Object.assign(this, {
         _stepSize        : 0.05,
-        _alphaCorrection : 3
+        _alphaCorrection : 3,
+        _type            : 2
     }, options);
 
     this._programs = WebGL.buildPrograms(this._gl, {
@@ -55,6 +56,7 @@ _generateFrame() {
     gl.uniform1f(program.uniforms.uStepSize, this._stepSize);
     gl.uniform1f(program.uniforms.uAlphaCorrection, this._alphaCorrection);
     gl.uniform1f(program.uniforms.uOffset, Math.random());
+    gl.uniform1f(program.uniforms.uType, this._type);
     gl.uniformMatrix4fv(program.uniforms.uMvpInverseMatrix, false, this._mvpInverseMatrix.m);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
