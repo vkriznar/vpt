@@ -122,7 +122,9 @@ in vec2 vPosition;
 out vec4 oColor;
 
 void main() {
-    oColor = texture(uFrame, vPosition);
+    vec4 acc = texture(uAccumulator, vPosition);
+    vec4 frame = texture(uFrame, vPosition);
+    oColor = max(frame, acc);
 }
 
 // #section EAMRender/vertex

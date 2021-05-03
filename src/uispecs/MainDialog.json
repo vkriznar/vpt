@@ -53,7 +53,8 @@
                         },
                         {
                           "value": "eammc",
-                          "label": "Emission-absorption model (Monte Carlo)"
+                          "label": "Emission-absorption model (Monte Carlo)",
+                          "selected": true
                         },
                         {
                           "value": "mcs",
@@ -61,8 +62,7 @@
                         },
                         {
                           "value": "mcm",
-                          "label": "Multiple scattering",
-                          "selected": true
+                          "label": "Multiple scattering"
                         },
                         {
                           "value": "mcc",

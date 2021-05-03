@@ -128,15 +128,13 @@ void main() {
             photon.samples++;
             photon.radiance += (radiance - photon.radiance) / float(photon.samples);
             resetPhoton(r, photon);
-        } else if (photon.bounces >= uMaxBounces) {
-            float weightAS = (muAbsorption + muEmission) / uMajorant;
-            photon.transmittance *= 1.0 - weightAS;
         } else if (r.y < PAbsorption) {
             float weightA = muAbsorption / (uMajorant * PAbsorption);
             photon.transmittance *= 1.0 - weightA;
         } else if (r.y < PAbsorption + PEmission) {
-            vec3 radiance = photon.transmittance * volumeSample.rgb;
-            radiance += photon.radiance;
+            float weightE = muEmission / (uMajorant * PEmission);
+            vec3 radiance = weightE * volumeSample.rgb;
+            // photon.radiance += radiance;
         } else {
             float weightN = muNull / (uMajorant * PNull);
             photon.transmittance *= weightN;

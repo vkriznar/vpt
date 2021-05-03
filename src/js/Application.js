@@ -94,7 +94,6 @@ _handleRendererChange(which) {
     if (this._rendererDialog) {
         this._rendererDialog.destroy();
     }
-    console.log(which);
     this._renderingContext.chooseRenderer(which);
     const renderer = this._renderingContext.getRenderer();
     const container = this._mainDialog.getRendererSettingsContainer();
