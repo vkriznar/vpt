@@ -78,26 +78,14 @@ void resetPhoton(inout vec2 randState, inout Photon photon) {
     photon.transmittance = vec3(1);
 }
 
-vec4 sampleEnvironmentMap(vec3 d) {
-    vec2 texCoord = vec2(atan(d.x, -d.z), asin(-d.y) * 2.0) * M_INVPI * 0.5 + 0.5;
-    return texture(uEnvironment, texCoord);
-}
-
 vec4 sampleVolumeColor(vec3 position) {
     vec2 volumeSample = texture(uVolume, position).rg;
     vec4 transferSample = texture(uTransferFunction, volumeSample);
     return transferSample;
 }
 
-vec3 randomDirection(vec2 U) {
-    float phi = U.x * M_2PI;
-    float z = U.y * 2.0 - 1.0;
-    float k = sqrt(1.0 - z * z);
-    return vec3(k * cos(phi), k * sin(phi), z);
-}
-
 void main() {
-    Photon photon; 
+    Photon photon;
     vec2 mappedPosition = vPosition * 0.5 + 0.5;
     photon.position = texture(uPosition, mappedPosition).xyz;
     vec4 directionAndBounces = texture(uDirection, mappedPosition);
@@ -124,18 +112,22 @@ void main() {
         float PEmission = muEmission / muMajorant;
 
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
+            // out of bounds
             vec3 radiance = vec3(0);
             photon.samples++;
             photon.radiance += (radiance - photon.radiance) / float(photon.samples);
             resetPhoton(r, photon);
         } else if (r.y < PAbsorption) {
+            // absorption
             float weightA = muAbsorption / (uMajorant * PAbsorption);
             photon.transmittance *= 1.0 - weightA;
         } else if (r.y < PAbsorption + PEmission) {
+            // emission
             float weightE = muEmission / (uMajorant * PEmission);
             vec3 radiance = weightE * volumeSample.rgb;
-            // photon.radiance += radiance;
+            photon.radiance += radiance;
         } else {
+            // null collision
             float weightN = muNull / (uMajorant * PNull);
             photon.transmittance *= weightN;
         }

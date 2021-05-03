@@ -17,7 +17,6 @@ class EAMMCRendererDialog extends AbstractDialog {
     
         this._binds.extinction.addEventListener('input', this._handleChange);
         this._binds.albedo.addEventListener('change', this._handleChange);
-        this._binds.bias.addEventListener('change', this._handleChange);
         this._binds.ratio.addEventListener('change', this._handleChange);
         this._binds.bounces.addEventListener('input', this._handleChange);
         this._binds.steps.addEventListener('input', this._handleChange);
@@ -35,14 +34,12 @@ class EAMMCRendererDialog extends AbstractDialog {
     _handleChange() {
         const extinction = this._binds.extinction.getValue();
         const albedo     = this._binds.albedo.getValue();
-        const bias       = this._binds.bias.getValue();
         const ratio      = this._binds.ratio.getValue();
         const bounces    = this._binds.bounces.getValue();
         const steps      = this._binds.steps.getValue();
     
         this._renderer.absorptionCoefficient = extinction * (1 - albedo);
         this._renderer.emissionCoefficient = extinction * albedo;
-        this._renderer.emissionBias = bias;
         this._renderer.majorant = extinction * ratio;
         this._renderer.maxBounces = bounces;
         this._renderer.steps = steps;
