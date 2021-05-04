@@ -128,9 +128,7 @@ void main() {
             // emission
             float weightE = muEmission / (uMajorant * PEmission);
             vec3 transmittance = weightE * volumeSample.rgb;
-            photon.currentRadiance += volumeSample.rgb * weightE * photon.transmittance;
-            // vec3 radiance = weightE * volumeSample.rgb * photon.transmittance;
-            // photon.radiance += radiance;
+            photon.currentRadiance += weightE * volumeSample.rgb * photon.transmittance;
         } else {
             // null collision
             float weightN = muNull / (uMajorant * PNull);
