@@ -75,7 +75,8 @@ void resetPhoton(inout vec2 randState, inout Photon photon) {
     photon.bounces = 0u;
     vec2 tbounds = max(intersectCube(from, photon.direction), 0.0);
     photon.position = from + tbounds.x * photon.direction;
-    photon.transmittance = vec3(1);
+    photon.transmittance = 1.0;
+    photon.currentRadiance = vec3(0);
 }
 
 vec4 sampleVolumeColor(vec3 position) {
@@ -91,7 +92,8 @@ void main() {
     vec4 directionAndBounces = texture(uDirection, mappedPosition);
     photon.direction = directionAndBounces.xyz;
     photon.bounces = uint(directionAndBounces.w + 0.5);
-    photon.transmittance = texture(uTransmittance, mappedPosition).rgb;
+    photon.transmittance = texture(uTransmittance, mappedPosition).a;
+    photon.currentRadiance = texture(uTransmittance, mappedPosition).rgb;
     vec4 radianceAndSamples = texture(uRadiance, mappedPosition);
     photon.radiance = radianceAndSamples.rgb;
     photon.samples = uint(radianceAndSamples.w + 0.5);
@@ -113,7 +115,7 @@ void main() {
 
         if (any(greaterThan(photon.position, vec3(1))) || any(lessThan(photon.position, vec3(0)))) {
             // out of bounds
-            vec3 radiance = vec3(0);
+            vec3 radiance = photon.currentRadiance;
             photon.samples++;
             photon.radiance += (radiance - photon.radiance) / float(photon.samples);
             resetPhoton(r, photon);
@@ -121,11 +123,14 @@ void main() {
             // absorption
             float weightA = muAbsorption / (uMajorant * PAbsorption);
             photon.transmittance *= 1.0 - weightA;
+            photon.currentRadiance *= 1.0 - weightA;
         } else if (r.y < PAbsorption + PEmission) {
             // emission
             float weightE = muEmission / (uMajorant * PEmission);
-            vec3 radiance = weightE * volumeSample.rgb;
-            photon.radiance += radiance;
+            vec3 transmittance = weightE * volumeSample.rgb;
+            photon.currentRadiance += volumeSample.rgb * weightE * photon.transmittance;
+            // vec3 radiance = weightE * volumeSample.rgb * photon.transmittance;
+            // photon.radiance += radiance;
         } else {
             // null collision
             float weightN = muNull / (uMajorant * PNull);
@@ -135,7 +140,7 @@ void main() {
 
     oPosition = vec4(photon.position, 0);
     oDirection = vec4(photon.direction, float(photon.bounces));
-    oTransmittance = vec4(photon.transmittance, 0);
+    oTransmittance = vec4(photon.currentRadiance, photon.transmittance);
     oRadiance = vec4(photon.radiance, float(photon.samples));
 }
 
@@ -209,12 +214,13 @@ void main() {
     photon.direction = normalize(to - from);
     vec2 tbounds = max(intersectCube(from, photon.direction), 0.0);
     photon.position = from + tbounds.x * photon.direction;
-    photon.transmittance = vec3(1);
+    photon.transmittance = 1.0;
+    photon.currentRadiance = vec3(0);
     photon.radiance = vec3(1);
     photon.bounces = 0u;
     photon.samples = 0u;
     oPosition = vec4(photon.position, 0);
     oDirection = vec4(photon.direction, float(photon.bounces));
-    oTransmittance = vec4(photon.transmittance, 0);
+    oTransmittance = vec4(photon.currentRadiance, photon.transmittance);
     oRadiance = vec4(photon.radiance, float(photon.samples));
 }
